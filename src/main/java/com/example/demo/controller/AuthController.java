@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -52,36 +53,38 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<JwtResponse> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+        public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String acces_jwt = tokenProvider.generateAccessToken(authentication);
-        String refresh_jwt = "";
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String acces_jwt = tokenProvider.generateAccessToken(authentication);
+            String refresh_jwt = null;
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-        String username = userDetails.getUsername();
-        String role = userDetails.getAuthorities().stream()
+            String username = userDetails.getUsername();
+            String role = userDetails.getAuthorities().stream()
+                    .map(authority -> authority.getAuthority())
+                    .findFirst()
+                    .orElse(null);
 
-                .findFirst()
-                .orElse(null)
-                .getAuthority();
+            Users user = usersService.getUserRepository().findByUsername(userDetails.getUsername())
+                    .orElse(null);
 
-        Users user = usersService.getUserRepository().findByUsername(userDetails.getUsername())
-                .orElse(null);
+            if (user != null) {
+                RefreshToken refreshToken = tokenProvider.generateAndSaveRefreshToken(user);
+                refresh_jwt = refreshToken.getToken();
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("User not found after authentication."));
+            }
 
-        if (user != null) {
-            RefreshToken refreshToken = tokenProvider.generateAndSaveRefreshToken(user);
-            refresh_jwt = refreshToken.getToken();
-        } else {
+            return ResponseEntity.ok(new JwtResponse(acces_jwt, refresh_jwt, username, role));
 
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("Invalid username or password."));
         }
-
-        return ResponseEntity.ok(new JwtResponse(acces_jwt, refresh_jwt, username, role));
-
     }
 
     @PostMapping("/logout")
