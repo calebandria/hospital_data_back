@@ -41,7 +41,7 @@ public class Users {
     
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "identification_id", referencedColumnName = "id")
-    private Identitifation identitifation;
+    private Identification identitifation;
 
     @OneToMany(mappedBy = "user",cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<RefreshToken> refreshTokens = new HashSet<>();
