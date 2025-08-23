@@ -53,7 +53,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-        public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
@@ -77,13 +77,66 @@ public class AuthController {
                 RefreshToken refreshToken = tokenProvider.generateAndSaveRefreshToken(user);
                 refresh_jwt = refreshToken.getToken();
             } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("User not found after authentication."));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new MessageResponse("User not found after authentication."));
             }
 
             return ResponseEntity.ok(new JwtResponse(acces_jwt, refresh_jwt, username, role));
 
         } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("Invalid username or password."));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse("Invalid username or password."));
+        }
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> refreshTokenUser(@RequestBody LogoutRequest refreshRequest) {
+        String refreshToken = refreshRequest.getRefreshToken();
+        String newAccess_jwt = null;
+        String newRefresh_jwt = null;
+        String username = null;
+        String role = null;
+        try {
+            if (tokenProvider.validateToken(refreshToken)) {
+                System.out.println(username);
+
+                if (refreshTokenService.verifyExpiration(refreshToken)) {
+                    // Users user =
+                    // usersService.getUserRepository().findByUsername(username).orElse(null);
+                    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                    UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+                    role = userDetails.getAuthorities().stream()
+                            .map(authority -> authority.getAuthority())
+                            .findFirst()
+                            .orElse(null);
+
+                    Users user = usersService.getUserRepository().findByUsername(userDetails.getUsername())
+                            .orElse(null);
+
+                    newAccess_jwt = tokenProvider.generateAccessToken(authentication);
+
+                    if (user != null) {
+                        RefreshToken newRefreshToken = tokenProvider.generateAndSaveRefreshToken(user);
+                        newRefresh_jwt = newRefreshToken.getToken();
+                    } else {
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                .body(new MessageResponse("User not found after authentication."));
+                    }
+                } else {
+                    refreshTokenService.deleteToken(refreshToken);
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body(new MessageResponse("Refresh token expired"));
+                }
+
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new MessageResponse("Invalid refresh token!"));
+            }
+            refreshTokenService.deleteToken(refreshToken);
+            return ResponseEntity.ok(new JwtResponse(newAccess_jwt, newRefresh_jwt, username, role));
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse("Refreshing error!"));
         }
     }
 

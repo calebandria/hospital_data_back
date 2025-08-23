@@ -1,5 +1,7 @@
 package com.example.demo.service;
 
+import java.time.Instant;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +21,14 @@ public class RefreshTokenService {
 
     public RefreshToken saveRefreshToken(RefreshToken refreshToken){
         return refreshTokenRepository.save(refreshToken);
+    }
+
+    public RefreshToken findRefreshToken(String token){
+        return refreshTokenRepository.findByToken(token);
+    }
+
+    public boolean verifyExpiration(String token){
+        return refreshTokenRepository.findByToken(token).getExpiryDate().isAfter(Instant.now());
     }
 
     @Transactional

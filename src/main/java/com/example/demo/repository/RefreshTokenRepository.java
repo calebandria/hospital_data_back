@@ -7,6 +7,8 @@ import com.example.demo.model.RefreshToken;
 
 @Repository
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken,Long> {
-    Integer deleteByToken(String token);    
+    Integer deleteByToken(String token);
+    RefreshToken findByToken(String token);
+
 
 }
