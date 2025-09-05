@@ -20,7 +20,6 @@ import com.example.demo.model.Identification;
 import com.example.demo.payload.IdentificationRegistration;
 import com.example.demo.payload.MessageResponse;
 import com.example.demo.service.IdentificationService;
-import com.example.demo.payload.IdenficationCodeRequest;
 import com.example.demo.payload.IdentificationCodeResponse;
 
 import jakarta.validation.Valid;

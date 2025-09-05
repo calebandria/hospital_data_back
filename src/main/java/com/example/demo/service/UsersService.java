@@ -5,7 +5,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.model.Identification;
-import com.example.demo.model.Role;
 import com.example.demo.model.Users;
 import com.example.demo.repository.IdentificationRepository;
 import com.example.demo.repository.UserRepository;

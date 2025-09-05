@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import com.example.demo.model.RefreshToken;
-import com.example.demo.model.Role;
 import com.example.demo.model.Users;
 import com.example.demo.payload.JwtResponse;
 import com.example.demo.payload.LoginRequest;
