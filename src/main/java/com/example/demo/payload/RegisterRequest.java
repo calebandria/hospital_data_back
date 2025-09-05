@@ -10,8 +10,6 @@ public class RegisterRequest {
     private String username;
     @NotBlank 
     private String password;
-    @NotBlank
-    private String role;
     @NotNull
     private long identification;
 }

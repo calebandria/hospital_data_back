@@ -152,10 +152,9 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
         try {
-            usersService.registerUser(registerRequest.getUsername(), registerRequest.getPassword(),
-                    Role.valueOf(registerRequest.getRole()), registerRequest.getIdentification());
+            usersService.registerUser(registerRequest.getUsername(), registerRequest.getPassword(),registerRequest.getIdentification());
             return ResponseEntity.status(HttpStatus.CREATED).body(new MessageResponse("User registered successfully!"));
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             // Handle the case where the username already exists
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponse(e.getMessage()));
         }

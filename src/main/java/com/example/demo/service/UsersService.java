@@ -26,23 +26,28 @@ public class UsersService {
     @Autowired
     private final PasswordEncoder passwordEncoder;
 
-    public UsersService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+
+    public UsersService(UserRepository userRepository, PasswordEncoder passwordEncoder, IdentificationRepository identificationRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.identificationRepository = identificationRepository;
     }
 
     @Transactional
-    public Users registerUser(String username, String password, Role role, long identification) {
+    public Users registerUser(String username, String password, long identification) {
         Users user = new Users();
         if (userRepository.findByUsername(username).isPresent()) {
             throw new IllegalArgumentException("Username already exists!");
         }
 
-        Identification identificationFound = identificationRepository.findByIdentification(identification).get();
+        Identification identificationFound = identificationRepository.findByIdentification(identification)
+            .orElseThrow(() -> new RuntimeException("Identification not found "));
+        
         user.setUsername(username);
-        user.setRole(role);
+        user.setRole(identificationFound.getRole());
         user.setPassword(passwordEncoder.encode(password));
         user.setIdentification(identificationFound);
+        identificationFound.setUser(user);
 
         return userRepository.save(user);
     }
