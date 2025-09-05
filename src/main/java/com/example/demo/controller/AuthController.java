@@ -15,7 +15,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-
 import com.example.demo.model.RefreshToken;
 import com.example.demo.model.Role;
 import com.example.demo.model.Users;
@@ -43,6 +42,7 @@ public class AuthController {
 
     @Autowired
     public final RefreshTokenService refreshTokenService;
+
 
     public AuthController(UsersService usersService, AuthenticationManager authenticationManager,
             JwtTokenProvider tokenProvider, RefreshTokenService refreshTokenService) {
@@ -153,7 +153,7 @@ public class AuthController {
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
         try {
             usersService.registerUser(registerRequest.getUsername(), registerRequest.getPassword(),
-                    Role.valueOf(registerRequest.getRole()));
+                    Role.valueOf(registerRequest.getRole()), registerRequest.getIdentification());
             return ResponseEntity.status(HttpStatus.CREATED).body(new MessageResponse("User registered successfully!"));
         } catch (IllegalArgumentException e) {
             // Handle the case where the username already exists

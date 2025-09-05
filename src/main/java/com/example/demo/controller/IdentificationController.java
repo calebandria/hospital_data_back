@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,10 +15,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.model.Role;
 import com.example.demo.model.Identification;
 import com.example.demo.payload.IdentificationRegistration;
 import com.example.demo.payload.MessageResponse;
 import com.example.demo.service.IdentificationService;
+import com.example.demo.payload.IdenficationCodeRequest;
+import com.example.demo.payload.IdentificationCodeResponse;
 
 import jakarta.validation.Valid;
 
@@ -37,7 +41,7 @@ public class IdentificationController {
     public ResponseEntity<?> registerIdentification(
             @Valid @RequestBody IdentificationRegistration identificationRegistration) {
         try {
-            identificationService.registerIdentification(identificationRegistration.getIdentification());
+            identificationService.registerIdentification(identificationRegistration.getIdentification(), Role.valueOf(identificationRegistration.getRole()));
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new MessageResponse("Identifiant enregistré avec succès"));
         }
@@ -57,6 +61,26 @@ public class IdentificationController {
         } else {
             // Returns 200 OK with the list of identifications
             return new ResponseEntity<>(identifications, HttpStatus.OK);
+        }
+    }
+
+    @GetMapping("/validate-code/{code}")
+    public ResponseEntity<?> validateCode(@Valid @PathVariable long code){
+        String role = null;
+        try {
+             Identification foundIdentification = identificationService.findSingleFreeIdentification(code);
+             if (foundIdentification != null){
+                role = foundIdentification.getRole().toString();
+                return  ResponseEntity.ok(new IdentificationCodeResponse(role,code));
+            }
+            else {
+                return  ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(new MessageResponse("User already assigned to it!"));
+            }
+        }
+        catch(NoSuchElementException err){
+            return  ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new MessageResponse("No existing identification"));
         }
     }
 
