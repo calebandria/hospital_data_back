@@ -39,7 +39,7 @@ jobs:
           script: |
             echo "Setting up environment file..."
             mkdir -p ~/app
-            cat > ~/app/.env <<EOF
+            cat > ~/app/target/.env <<EOF
             DB_URL=${{ secrets.DB_URL }}
             DB_USER=${{ secrets.DB_USER }}
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
