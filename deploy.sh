@@ -8,7 +8,7 @@ echo "Loading environment variables from .env..."
 export $(grep -v '^#' $APP_DIR/.env | xargs)
 
 echo "Stopping previous app if running..."
-pgrep -f "java -jar" && pkill -f "java -jar" || echo "No app running"
+pkill -f "java -jar" || true
 
 echo "Starting new app..."
 nohup java -jar "$JAR_FILE" > $APP_DIR/app.log 2>&1 &
