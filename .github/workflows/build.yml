@@ -21,14 +21,16 @@ jobs:
       - name: Build with Maven
         run: mvn clean package -DskipTests
 
-      - name: Copy JAR to server
+      - name: Copy jar and deployement script to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
-          source: "target/*.jar"
-          target: "~/app"
+          source: |
+             target/*.jar
+             deploy.sh
+          target: "~/app/"
 
       - name: Configure environment and restart app
         uses: appleboy/ssh-action@v1.1.0
@@ -39,15 +41,12 @@ jobs:
           script: |
             echo "Setting up environment file..."
             mkdir -p ~/app
-            cat > ~/app/target/.env <<EOF
+            cat > ~/app/.env <<EOF
             DB_URL=${{ secrets.DB_URL }}
             DB_USER=${{ secrets.DB_USER }}
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             EOF
 
-            echo "Stopping previous app if running..."
-            pkill -f "java -jar" || true
-
-            echo "Starting new app..."
-            nohup java -jar ~/app/target/*.jar > ~/app/app.log 2>&1 &
+            chmod 600 ~/app/.env
+            ~/app/deploy.sh
