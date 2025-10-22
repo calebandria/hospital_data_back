@@ -17,9 +17,12 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-
+      
       - name: Build with Maven
         run: mvn clean package -DskipTests
+        
+      - name: Rename JAR to fixed name
+        run: cp target/*.jar target/app.jar
 
       - name: Copy jar and deployement script to server
         uses: appleboy/scp-action@v0.1.7
