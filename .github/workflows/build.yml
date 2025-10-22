@@ -56,4 +56,5 @@ jobs:
             EOF
 
             chmod 600 ~/app/.env
+            chmod +x ~/app/deploy.sh
             ~/app/deploy.sh
